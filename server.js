@@ -11,7 +11,7 @@ const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
 const fs = require('fs');
-const colors = require('colors'); // ✅ Console colors
+const colors = require('colors'); // Console colors
 
 // Load environment variables
 dotenv.config({ path: './config/config.env' });
@@ -82,19 +82,13 @@ app.use(errorMiddleware);
 // ✅ Connect to MongoDB
 const connectDB = async () => {
   try {
-    // Use different database names for different environments
-    const dbName = process.env.NODE_ENV === 'production' ? 'unitech-production' : 'unitech-development';
-    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
-    
-    // Append database name if not already in URI
-    const connectionString = mongoUri.includes('?') 
-      ? mongoUri.replace('?', `/${dbName}?`)
-      : `${mongoUri}/${dbName}`;
-    
+    const connectionString = process.env.MONGO_URI || process.env.MONGODB_URI;
+
     const conn = await mongoose.connect(connectionString, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
+
     console.log(`✅ MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`.cyan.underline.bold);
   } catch (err) {
     console.error(`❌ MongoDB connection error: ${err.message}`.red);
