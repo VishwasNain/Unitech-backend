@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Wireless Earbuds",
+    "description": "High-quality wireless earbuds with noise cancellation",
+    "price": 99.99,
+    "category": "Electronics",
+    "brand": "SoundMaster",
+    "stock": 50,
+    "images": [
+      {
+        "public_id": "products/earbuds_123",
+        "url": "/images/earbuds.jpg"
+      }
+    ],
+    "ratings": 4.5,
+    "numReviews": 120
+  },
+  {
+    "name": "Smartphone X",
+    "description": "Latest smartphone with advanced camera features",
+    "price": 899.99,
+    "category": "Electronics",
+    "brand": "TechGiant",
+    "stock": 30,
+    "images": [
+      {
+        "public_id": "products/phone_456",
+        "url": "/images/phone.jpg"
+      }
+    ],
+    "ratings": 4.8,
+    "numReviews": 250
+  },
+  {
+    "name": "Laptop Pro",
+    "description": "Powerful laptop for professionals and gamers",
+    "price": 1499.99,
+    "category": "Electronics",
+    "brand": "TechMaster",
+    "stock": 20,
+    "images": [
+      {
+        "public_id": "products/laptop_789",
+        "url": "/images/laptop.jpg"
+      }
+    ],
+    "ratings": 4.7,
+    "numReviews": 180
+  }
+]

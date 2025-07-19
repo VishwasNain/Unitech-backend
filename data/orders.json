@@ -1,0 +1,68 @@
+[
+  {
+    "orderItems": [
+      {
+        "name": "Wireless Earbuds",
+        "quantity": 1,
+        "image": "/images/earbuds.jpg",
+        "price": 99.99,
+        "product": "5f8d0d55b54764421b7156da"
+      }
+    ],
+    "shippingInfo": {
+      "address": "123 Main St",
+      "city": "New York",
+      "postalCode": "10001",
+      "country": "USA",
+      "phoneNo": "+1234567890"
+    },
+    "paymentInfo": {
+      "id": "pi_123456789",
+      "status": "succeeded"
+    },
+    "itemsPrice": 99.99,
+    "taxPrice": 8.00,
+    "shippingPrice": 10.00,
+    "totalPrice": 117.99,
+    "orderStatus": "Processing",
+    "paidAt": "2023-01-15T10:30:00.000Z",
+    "user": "5f8d0d55b54764421b7156d9"
+  },
+  {
+    "orderItems": [
+      {
+        "name": "Smartphone X",
+        "quantity": 1,
+        "image": "/images/phone.jpg",
+        "price": 899.99,
+        "product": "5f8d0d55b54764421b7156db"
+      },
+      {
+        "name": "Wireless Earbuds",
+        "quantity": 1,
+        "image": "/images/earbuds.jpg",
+        "price": 99.99,
+        "product": "5f8d0d55b54764421b7156da"
+      }
+    ],
+    "shippingInfo": {
+      "address": "456 Oak Ave",
+      "city": "Los Angeles",
+      "postalCode": "90001",
+      "country": "USA",
+      "phoneNo": "+1987654321"
+    },
+    "paymentInfo": {
+      "id": "pi_987654321",
+      "status": "succeeded"
+    },
+    "itemsPrice": 999.98,
+    "taxPrice": 80.00,
+    "shippingPrice": 15.00,
+    "totalPrice": 1094.98,
+    "orderStatus": "Delivered",
+    "paidAt": "2023-01-10T14:15:00.000Z",
+    "deliveredAt": "2023-01-12T10:30:00.000Z",
+    "user": "5f8d0d55b54764421b7156da"
+  }
+]
