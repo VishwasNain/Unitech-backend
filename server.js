@@ -44,9 +44,26 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Enable CORS
+const allowedOrigins = [
+  process.env.CLIENT_URL || 'http://localhost:3000',
+  'https://unitech3.vercel.app', // Add your Vercel frontend URL here
+  'http://localhost:3000' // Keep localhost for development
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Basic middlewares
@@ -79,7 +96,7 @@ if (process.env.NODE_ENV === 'production') {
 // Error handling middleware
 app.use(errorMiddleware);
 
-// ✅ Connect to MongoDB
+// Connect to MongoDB
 const connectDB = async () => {
   try {
     const connectionString = process.env.MONGO_URI || process.env.MONGODB_URI;
@@ -89,9 +106,9 @@ const connectDB = async () => {
       useUnifiedTopology: true
     });
 
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`.cyan.underline.bold);
+    console.log(` MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`.cyan.underline.bold);
   } catch (err) {
-    console.error(`❌ MongoDB connection error: ${err.message}`.red);
+    console.error(` MongoDB connection error: ${err.message}`.red);
     process.exit(1);
   }
 };
@@ -100,18 +117,18 @@ const connectDB = async () => {
 connectDB().then(() => {
   const PORT = process.env.PORT || 5000;
   const server = app.listen(PORT, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
+    console.log(` Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
   });
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (err, promise) => {
-    console.error(`💥 Unhandled Rejection: ${err.message}`.red);
+    console.error(` Unhandled Rejection: ${err.message}`.red);
     server.close(() => process.exit(1));
   });
 
   // Handle uncaught exceptions
   process.on('uncaughtException', (err) => {
-    console.error(`💥 Uncaught Exception: ${err.message}`.red);
+    console.error(` Uncaught Exception: ${err.message}`.red);
     server.close(() => process.exit(1));
   });
 
