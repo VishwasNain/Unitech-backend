@@ -9,9 +9,7 @@ const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
-const path = require('path');
-const fs = require('fs');
-const colors = require('colors'); // Console colors
+const colors = require('colors');
 
 // Load environment variables
 dotenv.config({ path: './config/config.env' });
@@ -23,10 +21,8 @@ const productRoutes = require('./routes/product');
 const orderRoutes = require('./routes/order');
 const newsletterRoutes = require('./routes/newsletter');
 
-// Import middleware
 const errorMiddleware = require('./middleware/error');
 
-// Initialize express app
 const app = express();
 
 // Security middlewares
@@ -36,31 +32,15 @@ app.use(hpp());
 app.use(mongoSanitize());
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP, please try again after 10 minutes'
-});
+const limiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 100 });
 app.use(limiter);
 
 // Enable CORS
-const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:3000',
-  'https://unitech3.vercel.app', // Add your Vercel frontend URL here
-  'http://localhost:3000' // Keep localhost for development
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:3000',
+    'https://unitech3.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -70,13 +50,8 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Set static folder
-app.use(express.static(path.join(__dirname, 'public')));
-
 // Dev logging
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
+if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
 // Mount routers
 app.use('/api/v1/auth', authRoutes);
@@ -85,13 +60,7 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/newsletter', newsletterRoutes);
 
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../client', 'build', 'index.html'));
-  });
-}
+// No frontend build serving since frontend is deployed on Vercel
 
 // Error handling middleware
 app.use(errorMiddleware);
@@ -99,44 +68,35 @@ app.use(errorMiddleware);
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    const connectionString = process.env.MONGO_URI || process.env.MONGODB_URI;
-
-    const conn = await mongoose.connect(connectionString, {
+    const conn = await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
-
-    console.log(` MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`.cyan.underline.bold);
+    console.log(`MongoDB Connected: ${conn.connection.host}`.cyan.underline.bold);
   } catch (err) {
-    console.error(` MongoDB connection error: ${err.message}`.red);
+    console.error(`MongoDB connection error: ${err.message}`.red);
     process.exit(1);
   }
 };
 
-// Start server after DB is connected
 connectDB().then(() => {
   const PORT = process.env.PORT || 5000;
   const server = app.listen(PORT, () => {
-    console.log(` Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
   });
 
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (err, promise) => {
-    console.error(` Unhandled Rejection: ${err.message}`.red);
+  process.on('unhandledRejection', err => {
+    console.error(`Unhandled Rejection: ${err.message}`.red);
     server.close(() => process.exit(1));
   });
 
-  // Handle uncaught exceptions
-  process.on('uncaughtException', (err) => {
-    console.error(` Uncaught Exception: ${err.message}`.red);
+  process.on('uncaughtException', err => {
+    console.error(`Uncaught Exception: ${err.message}`.red);
     server.close(() => process.exit(1));
   });
 
-  // Handle SIGTERM
   process.on('SIGTERM', () => {
     console.log('SIGTERM RECEIVED. Shutting down gracefully');
-    server.close(() => {
-      console.log('Process terminated!');
-    });
+    server.close(() => console.log('Process terminated!'));
   });
 });
