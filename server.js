@@ -82,11 +82,20 @@ app.use(errorMiddleware);
 // ✅ Connect to MongoDB
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
+    // Use different database names for different environments
+    const dbName = process.env.NODE_ENV === 'production' ? 'unitech-production' : 'unitech-development';
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    
+    // Append database name if not already in URI
+    const connectionString = mongoUri.includes('?') 
+      ? mongoUri.replace('?', `/${dbName}?`)
+      : `${mongoUri}/${dbName}`;
+    
+    const conn = await mongoose.connect(connectionString, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`.cyan.underline.bold);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`.cyan.underline.bold);
   } catch (err) {
     console.error(`❌ MongoDB connection error: ${err.message}`.red);
     process.exit(1);
