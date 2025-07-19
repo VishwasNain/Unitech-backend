@@ -11,7 +11,7 @@ const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
 const fs = require('fs');
-const colors = require('colors'); // ✅ Added for colored console logs
+const colors = require('colors'); // ✅ Console colors
 
 // Load environment variables
 dotenv.config({ path: './config/config.env' });
@@ -29,11 +29,11 @@ const errorMiddleware = require('./middleware/error');
 // Initialize express app
 const app = express();
 
-// Set security headers
+// Security middlewares
 app.use(helmet());
-
-// Prevent XSS attacks
 app.use(xss());
+app.use(hpp());
+app.use(mongoSanitize());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -43,28 +43,20 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Prevent http param pollution
-app.use(hpp());
-
 // Enable CORS
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true
 }));
 
-// Body parser
+// Basic middlewares
 app.use(express.json());
-
-// Cookie parser
 app.use(cookieParser());
-
-// Sanitize data
-app.use(mongoSanitize());
 
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Dev logging middleware
+// Dev logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
@@ -76,7 +68,7 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/newsletter', newsletterRoutes);
 
-// Serve static assets in production
+// Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
   app.get('*', (req, res) => {
@@ -87,50 +79,44 @@ if (process.env.NODE_ENV === 'production') {
 // Error handling middleware
 app.use(errorMiddleware);
 
-// Database connection
+// ✅ Connect to MongoDB
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
-      // useCreateIndex and useFindAndModify are no longer supported in Mongoose 6+
     });
-
-    console.log(`MongoDB Connected: ${conn.connection.host}`.cyan.underline.bold);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`.cyan.underline.bold);
   } catch (err) {
-    console.error(`Error: ${err.message}`.red);
+    console.error(`❌ MongoDB connection error: ${err.message}`.red);
     process.exit(1);
   }
 };
 
-// Connect to the database before starting the server
-connectDB().catch(err => {
-  console.error(`DB Connection Error: ${err.message}`.red);
-  process.exit(1);
-});
+// Start server after DB is connected
+connectDB().then(() => {
+  const PORT = process.env.PORT || 5000;
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
+  });
 
-// Start server
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
-});
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err, promise) => {
+    console.error(`💥 Unhandled Rejection: ${err.message}`.red);
+    server.close(() => process.exit(1));
+  });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.error(`Unhandled Rejection: ${err.message}`.red);
-  server.close(() => process.exit(1));
-});
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (err) => {
+    console.error(`💥 Uncaught Exception: ${err.message}`.red);
+    server.close(() => process.exit(1));
+  });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error(`Uncaught Exception: ${err.message}`.red);
-  server.close(() => process.exit(1));
-});
-
-// Handle SIGTERM
-process.on('SIGTERM', () => {
-  console.log('SIGTERM RECEIVED. Shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated!');
+  // Handle SIGTERM
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM RECEIVED. Shutting down gracefully');
+    server.close(() => {
+      console.log('Process terminated!');
+    });
   });
 });
